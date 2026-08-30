@@ -903,6 +903,18 @@ void LLPanelPreferenceGameControl::onOpen(const LLSD& key)
     mOrigSettings = LLSD::emptyMap();
 }
 
+static void repositionOverCell(LLUICtrl* ctrl, LLScrollListCtrl* grid, S32 row_index, S32 col_index)
+{
+    LLRect rect(grid->getCellRect(row_index, col_index));
+    LLView* parent = grid->getParent();
+    while (parent && parent != ctrl->getParent())
+    {
+        rect.translate(parent->getRect().mLeft, parent->getRect().mBottom);
+        parent = parent->getParent();
+    }
+    ctrl->setRect(rect);
+}
+
 // Per-frame refresh of the Device State tab.  Only touches the tables while that
 // tab is actually the visible one, so it costs nothing on the other tabs.
 void LLPanelPreferenceGameControl::draw()
@@ -918,7 +930,7 @@ void LLPanelPreferenceGameControl::draw()
 
     if (sSelectedCombobox && sSelectedGrid && sSelectedRow >= 0 && sSelectedCol >= 0)
     {
-        fitInRect(sSelectedCombobox, sSelectedGrid, sSelectedRow, sSelectedCol);
+        repositionOverCell(sSelectedCombobox, sSelectedGrid, sSelectedRow, sSelectedCol);
     }
     
     LLPanelPreference::draw();
