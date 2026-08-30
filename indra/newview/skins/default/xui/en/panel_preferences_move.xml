@@ -313,4 +313,23 @@
      function="Floater.Show"
      parameter="pref_joystick" />
   </button>
+  <check_box
+   control_name="EnableRacingOverlay"
+   height="20"
+   label="Enable racing overlay"
+   layout="topleft"
+   left="30"
+   name="enable_racing_overlay"
+   tool_tip="Show a 3D label above vehicles in a race"
+   top_pad="15"
+   width="280" />
+  <check_box
+   control_name="DrawRacingMarkers"
+   height="20"
+   label="Draw vehicle markers"
+   layout="topleft"
+   left="30"
+   name="draw_racing_markers"
+   top_pad="5"
+   width="280" />
 </panel>
