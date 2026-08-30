@@ -5,6 +5,7 @@
 // Viewer core
 #include "llcharacter.h"
 #include "llhudtext.h"
+#include "llhudobject.h"
 #include "llhudmanager.h"
 #include "llviewercontrol.h"    // gSavedSettings
 #include "llviewerobjectlist.h" // gObjectList
@@ -19,6 +20,12 @@
 #include "llmath.h"
 #include "llstring.h"
 #include "lltrans.h"            // LLTrans::getString for localised strings
+
+// Standard library
+#include <set>
+#include <vector>
+#include <sstream>
+#include <algorithm>
 
 
 
@@ -126,10 +133,11 @@ void RacingOverlayManager::scanAvatars()
     // Build a set of avatar UUIDs we find this scan, to detect departures
     std::set<LLUUID> foundThisScan;
 
-    // Iterate all characters known to the viewer
-    for (S32 i = 0; i < (S32)LLCharacter::sInstances.size(); ++i)
+    // Iterate all characters known to the viewer (sInstances is a std::list,
+    // so we use a range-based for loop rather than operator[])
+    for (LLCharacter* character : LLCharacter::sInstances)
     {
-        LLVOAvatar* avatar = dynamic_cast<LLVOAvatar*>(LLCharacter::sInstances[i]);
+        LLVOAvatar* avatar = dynamic_cast<LLVOAvatar*>(character);
         if (!avatar || avatar->isDead() || !avatar->isFullyLoaded())
         {
             continue;
@@ -235,7 +243,7 @@ void RacingOverlayManager::updateHUDLabel(RacerInfo& info)
     {
         if (info.mHUDLabel)
         {
-            info.mHUDLabel->setVisible(false);
+            info.mHUDLabel->setHidden(true);
         }
         return;
     }
@@ -243,7 +251,7 @@ void RacingOverlayManager::updateHUDLabel(RacerInfo& info)
     LLViewerObject* vehicle = gObjectList.findObject(info.mVehicleID);
     if (!vehicle)
     {
-        if (info.mHUDLabel) info.mHUDLabel->setVisible(false);
+        if (info.mHUDLabel) info.mHUDLabel->setHidden(true);
         return;
     }
 
@@ -251,7 +259,7 @@ void RacingOverlayManager::updateHUDLabel(RacerInfo& info)
     if (!info.mHUDLabel)
     {
         info.mHUDLabel = static_cast<LLHUDText*>(
-            LLHUDManager::getInstance()->addHUDObject(LLHUDObject::LL_HUD_TEXT));
+            LLHUDObject::addHUDObject(LLHUDObject::LL_HUD_TEXT));
 
         info.mHUDLabel->setFont(LLFontGL::getFontSansSerifSmall());
         info.mHUDLabel->setZCompare(false);   // always draw on top
@@ -284,7 +292,7 @@ void RacingOverlayManager::updateHUDLabel(RacerInfo& info)
     info.mHUDLabel->setColor(color);
 
     info.mHUDLabel->setString(buildLabelText(info));
-    info.mHUDLabel->setVisible(true);
+    info.mHUDLabel->setHidden(false);
 }
 
 std::string RacingOverlayManager::buildLabelText(const RacerInfo& info) const
@@ -301,7 +309,7 @@ std::string RacingOverlayManager::buildLabelText(const RacerInfo& info) const
     }
     oss << info.mDisplayName << "\n";
 
-    // Speed: convert m/s → km/h
+    // Speed: convert m/s -> km/h
     F32 kmh = info.mSpeedMPS * 3.6f;
     oss << llformat("%.0f km/h", kmh);
 
