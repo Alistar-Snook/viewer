@@ -263,6 +263,8 @@ using namespace LL;
 #include "llcoproceduremanager.h"
 #include "llviewereventrecorder.h"
 
+#include "racingoverlaymanager.h"
+
 // *FIX: These extern globals should be cleaned up.
 // The globals either represent state/config/resource-storage of either
 // this app, or another 'component' of the viewer. App globals should be
@@ -5761,6 +5763,12 @@ void LLAppViewer::idle()
 
         gAgentCamera.updateCamera();
     }
+
+        if (gSavedSettings.getBOOL("EnableRacingOverlay"))
+        {
+        F32 frame_dt = LLFrameTimer::getFrameDeltaTimeF32();
+        RacingOverlayManager::getInstance()->update(frame_dt);
+        }
 
     // update media focus
     LLViewerMediaFocus::getInstance()->update();
