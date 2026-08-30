@@ -102,6 +102,7 @@ public:
     void            updateCamera();                 // Call once per frame to update camera location/orientation
     void            resetCamera();                  // Slam camera into its default position
     void            updateLastCamera();             // Set last camera to current camera
+    bool            isAgentOnVehicle() const;
 
 private:
     ECameraMode     mCameraMode;                    // Target mode after transition animation is done
