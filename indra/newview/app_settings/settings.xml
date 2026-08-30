@@ -16682,5 +16682,60 @@
       <key>Value</key>
       <integer>0</integer>
     </map>
+    <key>EnableRacingOverlay</key>
+    <map>
+      <key>Comment</key>
+      <string>Master toggle for the vehicle racing overlay</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>0</integer>
+    </map>
+    <key>DrawRacingMarkers</key>
+    <map>
+      <key>Comment</key>
+      <string>Show 3D labels above vehicles in a race</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>1</integer>
+    </map>
+    <key>RacingMarkerRange</key>
+    <map>
+      <key>Comment</key>
+      <string>Maximum distance in metres to detect racing vehicles</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>F32</string>
+      <key>Value</key>
+      <real>96.0</real>
+    </map>
+    <key>ShowRacingSpeed</key>
+    <map>
+      <key>Comment</key>
+      <string>Show speed in km/h on the racing label</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>1</integer>
+    </map>
+    <key>ShowRacingDistance</key>
+    <map>
+      <key>Comment</key>
+      <string>Show distance in metres on the racing label</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>1</integer>
+    </map>
 </map>
 </llsd>
