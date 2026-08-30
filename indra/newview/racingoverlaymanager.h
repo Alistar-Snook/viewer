@@ -3,8 +3,8 @@
 
 #include "llsingleton.h"
 #include "lluuid.h"
-#include "llvector3.h"
-#include "llcolor4.h"
+#include "v3math.h"
+#include "v4color.h"
 #include "llpointer.h"
 
 #include <map>
