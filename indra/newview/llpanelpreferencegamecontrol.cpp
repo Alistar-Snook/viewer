@@ -55,6 +55,7 @@ namespace
     static S32 sSelectedRow { -1 };   
     static S32 sSelectedCol { -1 };   
     static LLRect sSelectedOpenRect;
+    static LLRect computeCellScreenRect(LLScrollListCtrl* grid, LLView* relative_to, S32 row_index, S32 col_index);
 
     // The combobox popup currently overlaying sSelectedCell (one of the four
     // action-mapping/output selectors below).  Stashed so applyGameControlInput()
