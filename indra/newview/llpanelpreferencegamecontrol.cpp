@@ -52,6 +52,8 @@ namespace
     static LLScrollListCtrl* sSelectedGrid { nullptr };
     static LLScrollListItem* sSelectedItem { nullptr };
     static LLScrollListCell* sSelectedCell { nullptr };
+    static S32 sSelectedRow { -1 };   
+    static S32 sSelectedCol { -1 };   
 
     // The combobox popup currently overlaying sSelectedCell (one of the four
     // action-mapping/output selectors below).  Stashed so applyGameControlInput()
@@ -350,6 +352,8 @@ bool LLPanelPreferenceGameControl::initCombobox(LLScrollListItem* item, LLScroll
     // compute new rect for combobox
     S32 row_index = grid->getItemIndex(item);
     fitInRect(combobox, grid, row_index, col);
+    sSelectedRow = row_index;  
+    sSelectedCol = col;       
 
     // Pre-select the item matching the cell's current input.
     std::string value;
@@ -911,6 +915,12 @@ void LLPanelPreferenceGameControl::draw()
             updateAutoCalibration();
         }
     }
+
+    if (sSelectedCombobox && sSelectedGrid && sSelectedRow >= 0 && sSelectedCol >= 0)
+    {
+        fitInRect(sSelectedCombobox, sSelectedGrid, sSelectedRow, sSelectedCol);
+    }
+    
     LLPanelPreference::draw();
 }
 
@@ -1843,6 +1853,8 @@ void LLPanelPreferenceGameControl::clearSelectionState()
     sSelectedItem = nullptr;
     sSelectedCell = nullptr;
     sSelectedCombobox = nullptr;
+    sSelectedRow = -1;  
+    sSelectedCol = -1; 
     mNumericValueEditor->setVisible(false);
     mAxisInputSelector->setVisible(false);
     mAxisOutputSelector->setVisible(false);
