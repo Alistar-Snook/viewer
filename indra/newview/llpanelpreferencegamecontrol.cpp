@@ -55,7 +55,6 @@ namespace
     static S32 sSelectedRow { -1 };   
     static S32 sSelectedCol { -1 };   
     static LLRect sSelectedOpenRect;
-    static LLRect computeCellScreenRect(LLScrollListCtrl* grid, LLView* relative_to, S32 row_index, S32 col_index);
 
     // The combobox popup currently overlaying sSelectedCell (one of the four
     // action-mapping/output selectors below).  Stashed so applyGameControlInput()
@@ -148,6 +147,8 @@ namespace
         return LLFontGL::getFont(LLFontDescriptor("SecondLife-game-control", "Huge", 0));
     }
 }
+
+static LLRect computeCellScreenRect(LLScrollListCtrl* grid, LLView* relative_to, S32 row_index, S32 col_index);
 
 // Static entry point called when device list changes (device connected/disconnected).
 // Delegates to the singleton instance if it exists.
