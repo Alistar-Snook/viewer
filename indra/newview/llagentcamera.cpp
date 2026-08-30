@@ -1476,7 +1476,7 @@ void LLAgentCamera::updateCamera()
             const F32 VEHICLE_SMOOTHING_HALF_LIFE = 0.12f;  //0.12 can be changed after testing
             
             F32 smoothing_half_life = isAgentOnVehicle() ? VEHICLE_SMOOTHING_HALF_LIFE : SMOOTHING_HALF_LIFE;
-            F32 smoothing = LLSmoothInterpolation::getInterpolant(gSavedSettings.getF32("CameraPositionSmoothing") * SMOOTHING_HALF_LIFE, false);
+            F32 smoothing = LLSmoothInterpolation::getInterpolant(gSavedSettings.getF32("CameraPositionSmoothing") * smoothing_half_life, false);
 
             if (mFocusOnAvatar && !mFocusObject) // we differentiate on avatar mode
             {
