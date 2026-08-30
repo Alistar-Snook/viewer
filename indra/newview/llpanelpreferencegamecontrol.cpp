@@ -54,6 +54,7 @@ namespace
     static LLScrollListCell* sSelectedCell { nullptr };
     static S32 sSelectedRow { -1 };   
     static S32 sSelectedCol { -1 };   
+    static LLRect sSelectedOpenRect;
 
     // The combobox popup currently overlaying sSelectedCell (one of the four
     // action-mapping/output selectors below).  Stashed so applyGameControlInput()
@@ -353,7 +354,8 @@ bool LLPanelPreferenceGameControl::initCombobox(LLScrollListItem* item, LLScroll
     S32 row_index = grid->getItemIndex(item);
     fitInRect(combobox, grid, row_index, col);
     sSelectedRow = row_index;  
-    sSelectedCol = col;       
+    sSelectedCol = col;    
+    sSelectedOpenRect = computeCellScreenRect(grid, combobox->getParent(), row_index, col);
 
     // Pre-select the item matching the cell's current input.
     std::string value;
@@ -903,16 +905,16 @@ void LLPanelPreferenceGameControl::onOpen(const LLSD& key)
     mOrigSettings = LLSD::emptyMap();
 }
 
-static void repositionOverCell(LLUICtrl* ctrl, LLScrollListCtrl* grid, S32 row_index, S32 col_index)
+static LLRect computeCellScreenRect(LLScrollListCtrl* grid, LLView* relative_to, S32 row_index, S32 col_index)
 {
     LLRect rect(grid->getCellRect(row_index, col_index));
     LLView* parent = grid->getParent();
-    while (parent && parent != ctrl->getParent())
+    while (parent && parent != relative_to)
     {
         rect.translate(parent->getRect().mLeft, parent->getRect().mBottom);
         parent = parent->getParent();
     }
-    ctrl->setRect(rect);
+    return rect;
 }
 
 // Per-frame refresh of the Device State tab.  Only touches the tables while that
@@ -930,7 +932,11 @@ void LLPanelPreferenceGameControl::draw()
 
     if (sSelectedCombobox && sSelectedGrid && sSelectedRow >= 0 && sSelectedCol >= 0)
     {
-        repositionOverCell(sSelectedCombobox, sSelectedGrid, sSelectedRow, sSelectedCol);
+        LLRect current_rect = computeCellScreenRect(sSelectedGrid, sSelectedCombobox->getParent(), sSelectedRow, sSelectedCol);
+        if (current_rect != sSelectedOpenRect)
+        {
+            clearSelectionState();
+        }
     }
     
     LLPanelPreference::draw();
