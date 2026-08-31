@@ -1204,6 +1204,16 @@ static LLTrace::BlockTimerStatHandle FTM_UPDATE_CAMERA("Camera");
 
 extern bool gCubeSnapshot;
 
+//isOnVehicle
+bool LLAgentCamera::isOnVehicle() const
+ {
+     if (!isAgentAvatarValid() || !gAgentAvatarp->isSitting())
+     {
+         return false;
+     }
+    LLViewerObject* parent = dynamic_cast<LLViewerObject*>(gAgentAvatarp->getParent());
+    return parent && !parent->isAvatar() && parent->flagUsePhysics();
+ }
 //-----------------------------------------------------------------------------
 // updateCamera()
 //-----------------------------------------------------------------------------
@@ -1434,8 +1444,10 @@ void LLAgentCamera::updateCamera()
         if (cameraThirdPerson() && !mCameraSmoothingStop)
         {
             const F32 SMOOTHING_HALF_LIFE = 0.02f;
+            const F32 VEHICLE_SMOOTHING_HALF_LIFE = 0.12f;
 
-            F32 smoothing = LLSmoothInterpolation::getInterpolant(gSavedSettings.getF32("CameraPositionSmoothing") * SMOOTHING_HALF_LIFE, false);
+       F32 smoothing_half_life = isOnVehicle() ? VEHICLE_SMOOTHING_HALF_LIFE : SMOOTHING_HALF_LIFE;
+       F32 smoothing = LLSmoothInterpolation::getInterpolant(gSavedSettings.getF32("CameraPositionSmoothing") * smoothing_half_life, false);
 
             if (mFocusOnAvatar && !mFocusObject) // we differentiate on avatar mode
             {
