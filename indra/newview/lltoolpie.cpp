@@ -278,6 +278,20 @@ bool LLToolPie::handleLeftClickPick()
         parent = object->getRootEdit();
     }
 
+    if (mask == MASK_CONTROL && object)
+    {
+        LLViewerObject* vehicle_root = parent ? parent : object;
+        bool is_vehicle = vehicle_root
+                           && !vehicle_root->isAvatar()
+                           && vehicle_root->flagUsePhysics();
+
+        if (is_vehicle)
+        {
+            gAgentCamera.startSpectating(vehicle_root->getID());
+            return true;
+        }
+    }
+
     if (handleMediaClick(mPick))
     {
         return true;

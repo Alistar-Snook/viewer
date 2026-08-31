@@ -154,6 +154,7 @@ LLAgentCamera::LLAgentCamera() :
     mCameraUpVector(LLVector3::z_axis), // default is straight up
 
     mFocusOnAvatar(true),
+    mSpectating(false),
     mAllowChangeToFollow(false),
     mFocusGlobal(),
     mFocusTargetGlobal(),
@@ -1231,7 +1232,7 @@ void LLAgentCamera::updateCamera()
         mCameraUpVector = mCameraUpVector * gAgentAvatarp->getRenderRotation();
     }
 
-    if (cameraThirdPerson() && (mFocusOnAvatar || mAllowChangeToFollow) && LLFollowCamMgr::getInstance()->getActiveFollowCamParams())
+    if (!mSpectating && cameraThirdPerson() && (mFocusOnAvatar || mAllowChangeToFollow) && LLFollowCamMgr::getInstance()->getActiveFollowCamParams())
     {
         mAllowChangeToFollow = false;
         mFocusOnAvatar = true;
@@ -2694,6 +2695,30 @@ void LLAgentCamera::setSitCamera(const LLUUID &object_id, const LLVector3 &camer
         mSitCameraEnabled = false;
     }
 }
+// ----------------------------------------------------------------------------
+// Spectating functions
+// ----------------------------------------------------------------------------
+void LLAgentCamera::startSpectating(const LLUUID& object_id)
+{
+    LLViewerObject* object = gObjectList.findObject(object_id);
+    if (!object)
+    {
+        return;
+    }
+    setFocusOnAvatar(false, ANIMATE);
+    LLVector3d object_pos_global = gAgent.getPosGlobalFromAgent(object->getRenderPosition());
+    setFocusGlobal(object_pos_global, object_id);
+    mSpectating = true;
+}
+
+void LLAgentCamera::stopSpectating()
+{
+    if (!mSpectating)
+    {
+        return;
+    }
+    setFocusOnAvatar(true, ANIMATE);
+}
 
 //-----------------------------------------------------------------------------
 // setFocusOnAvatar()
@@ -2717,6 +2742,7 @@ void LLAgentCamera::setFocusOnAvatar(bool focus_on_avatar, bool animate, bool re
     // you're just walking around with a camera on you...eesh.
     if (!mFocusOnAvatar && focus_on_avatar && reset_axes)
     {
+        mSpectating = false;
         setFocusGlobal(LLVector3d::zero);
         mCameraFOVZoomFactor = 0.f;
         if (mCameraMode == CAMERA_MODE_THIRD_PERSON)
