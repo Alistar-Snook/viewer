@@ -28,6 +28,7 @@
 
 #include "llcriticaldamp.h"
 #include <algorithm>
+#include <cmath>
 
 //-----------------------------------------------------------------------------
 // static members
@@ -79,6 +80,16 @@ void LLSmoothInterpolation::updateInterpolants()
 }
 
 //-----------------------------------------------------------------------------
+// Quantize time_constant to avoid unbounded cache growth from 
+// continuously changing float values (e.g., speed, distance).
+//-----------------------------------------------------------------------------
+static const F32 CACHE_QUANTUM = 0.0001f; // 0.1 ms
+
+static F32 quantizeTimeConstant(F32 time_constant)
+{
+    return std::round(time_constant / CACHE_QUANTUM) * CACHE_QUANTUM;
+}
+//-----------------------------------------------------------------------------
 // getInterpolant()
 //-----------------------------------------------------------------------------
 F32 LLSmoothInterpolation::getInterpolant(F32SecondsImplicit time_constant, bool use_cache)
@@ -90,16 +101,18 @@ F32 LLSmoothInterpolation::getInterpolant(F32SecondsImplicit time_constant, bool
 
     if (use_cache)
     {
-        interpolant_vec_t::iterator find_it = std::lower_bound(sInterpolants.begin(), sInterpolants.end(), time_constant.value(), CompareTimeConstants());
-        if (find_it != sInterpolants.end() && find_it->mTimeScale == time_constant)
+        F32 key = quantizeTimeConstant(time_constant.value());
+
+        interpolant_vec_t::iterator find_it = std::lower_bound(sInterpolants.begin(), sInterpolants.end(), key, CompareTimeConstants());
+        if (find_it != sInterpolants.end() && find_it->mTimeScale == key)
         {
             return find_it->mInterpolant;
         }
         else
         {
             Interpolant interp;
-            interp.mTimeScale = time_constant.value();
-            interp.mInterpolant = calcInterpolant(time_constant.value());
+            interp.mTimeScale = key;
+            interp.mInterpolant = calcInterpolant(key);
             sInterpolants.insert(find_it, interp);
             return interp.mInterpolant;
         }
