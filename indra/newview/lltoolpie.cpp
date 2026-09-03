@@ -1452,6 +1452,18 @@ LLTool* LLToolPie::getOverrideTool(MASK mask)
     {
         if (mask == DEFAULT_GRAB_MASK)
         {
+            LLViewerObject* hover_object = mHoverPick.getObject();
+            LLViewerObject* hover_root   = hover_object ? hover_object->getRootEdit() : NULL;
+            LLViewerObject* candidate    = hover_root ? hover_root : hover_object;
+            bool hovering_vehicle = candidate
+                                     && !candidate->isAvatar()
+                                     && candidate->flagUsePhysics();
+
+            if (hovering_vehicle)
+            {
+                // no grab if it's a vehicle
+                return LLToolPie::getInstance();
+            }
             return LLToolGrab::getInstance();
         }
         else if (mask == (MASK_CONTROL | MASK_SHIFT))
