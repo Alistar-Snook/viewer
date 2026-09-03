@@ -278,26 +278,18 @@ bool LLToolPie::handleLeftClickPick()
         parent = object->getRootEdit();
     }
 
-    if (mask == (MASK_CONTROL | MASK_ALT) && object)
+    if (mask == MASK_CONTROL && object)
     {
         LLViewerObject* vehicle_root = parent ? parent : object;
         bool is_vehicle = vehicle_root
-                           && !vehicle_root->isAvatar()
-                           && vehicle_root->flagUsePhysics();
+                       && !vehicle_root->isAvatar()
+                       && vehicle_root->flagUsePhysics();
 
-        if (is_vehicle)
-        {
-            if (gAgentCamera.isSpectating())
-             {
-                 // Toggle off if we're already spectating (same or different vehicle)
-                 gAgentCamera.stopSpectating();
-             }
-             else
-             {
-                 gAgentCamera.startSpectating(vehicle_root->getID());
-             }
-            return true;
-        }
+       if (is_vehicle)
+       {
+           gAgentCamera.startSpectating(vehicle_root->getID());
+           return true;
+       }
     }
 
     if (handleMediaClick(mPick))
