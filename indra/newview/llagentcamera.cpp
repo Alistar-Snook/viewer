@@ -27,6 +27,8 @@
 #include "llviewerprecompiledheaders.h"
 #include "llagentcamera.h"
 
+#include <set>
+
 #include "pipeline.h"
 
 #include "llagent.h"
@@ -154,6 +156,7 @@ LLAgentCamera::LLAgentCamera() :
     mCameraUpVector(LLVector3::z_axis), // default is straight up
 
     mFocusOnAvatar(true),
+    mSpectating(false),
     mAllowChangeToFollow(false),
     mFocusGlobal(),
     mFocusTargetGlobal(),
@@ -1231,11 +1234,16 @@ void LLAgentCamera::updateCamera()
         mCameraUpVector = mCameraUpVector * gAgentAvatarp->getRenderRotation();
     }
 
-    if (cameraThirdPerson() && (mFocusOnAvatar || mAllowChangeToFollow) && LLFollowCamMgr::getInstance()->getActiveFollowCamParams())
+    if (!mSpectating && cameraThirdPerson() && (mFocusOnAvatar || mAllowChangeToFollow) && LLFollowCamMgr::getInstance()->getActiveFollowCamParams())
     {
         mAllowChangeToFollow = false;
         mFocusOnAvatar = true;
         changeCameraToFollow();
+    }
+
+    if (mSpectating)
+    {
+        updateSpectating();
     }
 
     //NOTE - this needs to be integrated into a general upVector system here within llAgent.
@@ -2694,12 +2702,188 @@ void LLAgentCamera::setSitCamera(const LLUUID &object_id, const LLVector3 &camer
         mSitCameraEnabled = false;
     }
 }
+// ----------------------------------------------------------------------------
+// Spectating functions
+// ----------------------------------------------------------------------------
+void LLAgentCamera::startSpectating(const LLUUID& object_id)
+{
+    LLViewerObject* object = gObjectList.findObject(object_id);
+    if (!object)
+    {
+        return;
+    }
+    setFocusOnAvatar(false, ANIMATE);
+    LLVector3d object_pos_global = gAgent.getPosGlobalFromAgent(object->getRenderPosition());
+    setFocusGlobal(object_pos_global, object_id);
+    mSpectating = true;
+    mSpectateObjectId = object_id;
+}
+
+void LLAgentCamera::stopSpectating()
+{
+    if (!mSpectating)
+    {
+        return;
+    }
+    // Clear mSpectating before calling setFocusOnAvatar(), which refuses to
+    // reset focus onto the avatar while mSpectating is still true.
+    mSpectating = false;
+    mSpectateObjectId.setNull();
+    setFocusOnAvatar(true, ANIMATE);
+}
+
+void LLAgentCamera::updateSpectating()
+{
+    LLViewerObject* vehicle = gObjectList.findObject(mSpectateObjectId);
+    if (!vehicle || vehicle->isDead())
+    {
+        stopSpectating();
+        return;
+    }
+
+    // Chase-cam offset in the vehicle's local frame, rotated into world
+    // recomputed every frame so the camera tracks both movement and turns.
+    static const F32 FOLLOW_DISTANCE = 8.f;   // meters behind the vehicle
+    static const F32 FOLLOW_HEIGHT   = 3.f;   // meters above the vehicle
+
+    LLQuaternion vehicle_rot = vehicle->getRenderRotation();
+    LLVector3 local_offset(-FOLLOW_DISTANCE, 0.f, FOLLOW_HEIGHT);
+    LLVector3 world_offset = local_offset * vehicle_rot;
+
+    LLVector3d vehicle_pos_global = gAgent.getPosGlobalFromAgent(vehicle->getRenderPosition());
+    LLVector3d camera_pos_global = vehicle_pos_global + LLVector3d(world_offset);
+
+    setCameraPosAndFocusGlobal(camera_pos_global, vehicle_pos_global, mSpectateObjectId);
+
+    // Cancel the smoothing animation setCameraPosAndFocusGlobal() just started
+    stopCameraAnimation();
+}
+
+void LLAgentCamera::spectateNextVehicle(bool forward)
+{
+    bool seated_on_vehicle = isAgentAvatarValid() && gAgentAvatarp->getParent();
+
+    // Case 1: seated on a physics vehicle right now -> target it directly.
+    if (!mSpectating && isAgentAvatarValid() && gAgentAvatarp->getParent())
+    {
+        LLViewerObject* parent_obj = dynamic_cast<LLViewerObject*>(gAgentAvatarp->getParent());
+        if (parent_obj && parent_obj->flagUsePhysics())
+        {
+            mLastVehicleId = parent_obj->getID();
+            startSpectating(parent_obj->getID());
+            return;
+        }
+    }
+
+    // Case 1b: on foot, not spectating, but we remember a vehicle we were
+    // seated on earlier -> return to it directly, even if its physics is
+    // now off (e.g. parked and unoccupied).
+    if (!mSpectating && !seated_on_vehicle && mLastVehicleId.notNull())
+    {
+        LLViewerObject* last_vehicle = gObjectList.findObject(mLastVehicleId);
+        if (last_vehicle && !last_vehicle->isDead())
+        {
+            startSpectating(mLastVehicleId);
+            return;
+        }
+        mLastVehicleId.setNull();
+    }
+
+    // Case 2: cycle through nearby physics objects by distance. We can't check vehicles (no flags)
+    // so occupied objects (someone seated on them) are treated as vehicles.
+    LLVector3d agent_pos = gAgent.getPositionGlobal();
+
+    std::set<LLViewerObject*> ridden_objects;
+    S32 num_objects = gObjectList.getNumObjects();
+    for (S32 i = 0; i < num_objects; ++i)
+    {
+        LLViewerObject* obj = gObjectList.getObject(i);
+        if (obj && !obj->isDead() && obj->isAvatar() && obj->getParent())
+        {
+            LLViewerObject* seat = dynamic_cast<LLViewerObject*>(obj->getParent());
+            if (seat)
+            {
+                ridden_objects.insert(seat);
+            }
+        }
+    }
+
+    struct Candidate
+    {
+        bool occupied;
+        F64 dist;
+        LLUUID id;
+    };
+    std::vector<Candidate> candidates;
+
+    for (S32 i = 0; i < num_objects; ++i)
+    {
+        LLViewerObject* obj = gObjectList.getObject(i);
+        if (!obj || obj->isDead() || obj->isAvatar() || !obj->flagUsePhysics())
+        {
+            continue;
+        }
+        LLVector3d obj_pos = gAgent.getPosGlobalFromAgent(obj->getRenderPosition());
+        F64 dist = (obj_pos - agent_pos).magVec();
+        bool occupied = ridden_objects.count(obj) > 0;
+        candidates.push_back({occupied, dist, obj->getID()});
+    }
+
+    if (candidates.empty())
+    {
+        return;
+    }
+
+    std::sort(candidates.begin(), candidates.end(),
+              [](const Candidate& a, const Candidate& b)
+              {
+                  if (a.occupied != b.occupied)
+                  {
+                      return a.occupied; // occupied vehicles sort first
+                  }
+                  return a.dist < b.dist;
+              });
+
+    S32 current_index = -1;
+    if (mSpectating)
+    {
+        for (size_t i = 0; i < candidates.size(); ++i)
+        {
+            if (candidates[i].id == mSpectateObjectId)
+            {
+                current_index = (S32)i;
+                break;
+            }
+        }
+    }
+
+    S32 count = (S32)candidates.size();
+    S32 next_index;
+    if (current_index < 0)
+    {
+        next_index = forward ? 0 : count - 1;
+    }
+    else
+    {
+        next_index = forward ? (current_index + 1) % count
+                              : (current_index - 1 + count) % count;
+    }
+
+    startSpectating(candidates[next_index].id);
+}
 
 //-----------------------------------------------------------------------------
 // setFocusOnAvatar()
 //-----------------------------------------------------------------------------
 void LLAgentCamera::setFocusOnAvatar(bool focus_on_avatar, bool animate, bool reset_axes)
 {
+    // Ignore requests to refocus on the avatar while spectating.
+    // Only stopSpectating() may end spectating.
+    if (mSpectating && focus_on_avatar)
+    {
+        return;
+    }
+
     if (focus_on_avatar != mFocusOnAvatar)
     {
         if (animate)

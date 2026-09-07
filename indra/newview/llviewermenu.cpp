@@ -4712,6 +4712,10 @@ void reset_view_final(bool proceed);
 
 void handle_reset_view()
 {
+   if (gAgentCamera.isSpectating())
+    {
+        gAgentCamera.stopSpectating();
+    }
     if (gAgentCamera.cameraCustomizeAvatar())
     {
         // switching to outfit selector should automagically save any currently edited wearable

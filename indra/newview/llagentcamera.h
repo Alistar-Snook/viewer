@@ -215,6 +215,14 @@ public:
     void            setFocusGlobal(const LLPickInfo& pick);
     void            setFocusGlobal(const LLVector3d &focus, const LLUUID &object_id = LLUUID::null);
     void            setFocusOnAvatar(bool focus, bool animate, bool reset_axes = true);
+    void            startSpectating(const LLUUID& object_id);
+    void            stopSpectating();
+    bool            isSpectating() const { return mSpectating; }
+    void            spectateNextVehicle(bool forward = true);
+private:
+    // Per-frame chase-cam update while mSpectating is true.
+    void            updateSpectating();
+public:
     void            setCameraPosAndFocusGlobal(const LLVector3d& pos, const LLVector3d& focus, const LLUUID &object_id);
     void            clearFocusObject();
     void            setFocusObject(LLViewerObject* object);
@@ -226,6 +234,9 @@ private:
     LLVector3d      mCameraFocusOffset;             // Offset from focus point in build mode
     LLVector3d      mCameraFocusOffsetTarget;       // Target towards which we are lerping the camera's focus offset
     bool            mFocusOnAvatar;
+    bool            mSpectating;
+    LLUUID          mSpectateObjectId;      // vehicle currently being followed
+    LLUUID          mLastVehicleId;         // last vehicle ridden, for "V" while on foot
     bool            mAllowChangeToFollow;
     LLVector3d      mFocusGlobal;
     LLVector3d      mFocusTargetGlobal;

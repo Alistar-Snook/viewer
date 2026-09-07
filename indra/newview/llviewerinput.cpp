@@ -798,6 +798,13 @@ bool toggle_sit(EKeystate s)
     return true;
 }
 
+bool spectate_next_vehicle(EKeystate s)
+{
+    if (KEYSTATE_DOWN != s) return true;
+    gAgentCamera.spectateNextVehicle();
+    return true;
+}
+
 bool toggle_pause_media(EKeystate s) // analogue of play/pause button in top bar
 {
     if (KEYSTATE_DOWN != s) return true;
@@ -963,6 +970,7 @@ REGISTER_KEYBOARD_ACTION("run_left", run_left);
 REGISTER_KEYBOARD_ACTION("run_right", run_right);
 REGISTER_KEYBOARD_ACTION("toggle_run", toggle_run);
 REGISTER_KEYBOARD_ACTION("toggle_sit", toggle_sit);
+REGISTER_KEYBOARD_ACTION("spectate_next_vehicle", spectate_next_vehicle);
 REGISTER_KEYBOARD_ACTION("toggle_pause_media", toggle_pause_media);
 REGISTER_KEYBOARD_ACTION("toggle_enable_media", toggle_enable_media);
 REGISTER_KEYBOARD_ACTION("teleport_to", teleport_to);
@@ -1362,6 +1370,17 @@ void LLViewerInput::resetBindings()
         mKeyBindings[i].clear();
         mMouseBindings[i].clear();
         mLMouseDefaultHandling[i] = false;
+    }
+
+    // Hardcoded "V" binding for the vehicle spectator cam
+    {
+        KEY spectate_key;
+        LLKeyboard::keyFromString("V", &spectate_key);
+        if (spectate_key != KEY_NONE)
+        {
+            bindKey(MODE_THIRD_PERSON, spectate_key, MASK_NONE, "spectate_next_vehicle");
+            bindKey(MODE_SITTING, spectate_key, MASK_NONE, "spectate_next_vehicle");
+        }
     }
 }
 
