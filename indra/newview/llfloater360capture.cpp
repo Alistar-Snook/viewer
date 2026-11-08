@@ -65,7 +65,6 @@ LLFloater360Capture::LLFloater360Capture(const LLSD& key)
     // such time as we ask it not to (the dtor). If we crash or
     // otherwise, exit before this is turned off, the Simulator
     // will take care of cleaning up for us.
-    mStartILMode = gAgent.getInterestListMode();
 
     // send everything to us for as long as this floater is open
     gAgent.changeInterestListMode(IL_MODE_360);
@@ -80,15 +79,10 @@ LLFloater360Capture::~LLFloater360Capture()
         mWebBrowser->unloadMediaSource();
     }
 
-    // Restore interest list mode to the state when started
-    // Normally LLFloater360Capture tells the Simulator send everything
-    // and now reverts to the regular "keyhole" frustum of interest
-    // list updates.
-    if (!LLApp::isExiting() &&
-        gSavedSettings.getBOOL("360CaptureUseInterestListCap") &&
-        mStartILMode != gAgent.getInterestListMode())
+    // Go back to the mode chosen in preferences
+    if (!LLApp::isExiting())
     {
-        gAgent.changeInterestListMode(mStartILMode);
+        gAgent.changeInterestListMode(gSavedSettings.getBOOL("InterestListAllDirections") ? IL_MODE_360 : IL_MODE_DEFAULT);
     }
 }
 

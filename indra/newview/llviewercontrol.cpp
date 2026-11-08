@@ -58,6 +58,7 @@
 #include "pipeline.h"
 #include "llviewerjoystick.h"
 #include "llviewerobjectlist.h"
+#include "llviewerregion.h"
 #include "llviewerparcelmgr.h"
 #include "llparcel.h"
 #include "llkeyboard.h"
@@ -636,6 +637,18 @@ bool handleVelocityInterpolate(const LLSD& newvalue)
     return true;
 }
 
+bool handleInterestListAllDirections(const LLSD& newvalue)
+{
+    // The 360 snapshot floater needs this mode while it is open
+    if (LLFloaterReg::instanceVisible("360capture"))
+    {
+        return true;
+    }
+
+    gAgent.changeInterestListMode(newvalue.asBoolean() ? IL_MODE_360 : IL_MODE_DEFAULT);
+    return true;
+}
+
 bool handleForceShowGrid(const LLSD& newvalue)
 {
     LLPanelLogin::updateLocationSelectorsVisibility();
@@ -1002,6 +1015,7 @@ void settings_setup_listeners()
     setting_setup_signal_listener(gSavedSettings, "AudioLevelMic", handleVoiceClientPrefsChanged);
     setting_setup_signal_listener(gSavedSettings, "LipSyncEnabled", handleVoiceClientPrefsChanged);
     setting_setup_signal_listener(gSavedSettings, "VelocityInterpolate", handleVelocityInterpolate);
+    setting_setup_signal_listener(gSavedSettings, "InterestListAllDirections", handleInterestListAllDirections);
     setting_setup_signal_listener(gSavedSettings, "QAMode", show_debug_menus);
     setting_setup_signal_listener(gSavedSettings, "UseDebugMenus", show_debug_menus);
     setting_setup_signal_listener(gSavedSettings, "AgentPause", toggle_agent_pause);

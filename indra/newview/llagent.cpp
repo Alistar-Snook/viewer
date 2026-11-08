@@ -505,6 +505,9 @@ void LLAgent::init()
     mLastKnownRequestMaturity = mLastKnownResponseMaturity;
     mIsDoSendMaturityPreferenceToServer = true;
 
+    // Regions pick this mode up when their capabilities arrive
+    mInterestListMode = gSavedSettings.getBOOL("InterestListAllDirections") ? IL_MODE_360 : IL_MODE_DEFAULT;
+
     if (!mTeleportFinishedSlot.connected())
     {
         mTeleportFinishedSlot = LLViewerParcelMgr::getInstance()->setTeleportFinishedCallback(boost::bind(&LLAgent::handleTeleportFinished, this));

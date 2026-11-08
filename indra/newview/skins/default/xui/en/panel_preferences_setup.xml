@@ -93,6 +93,16 @@
    name="connection_port"
    top_delta="3"
    width="170" />
+  <check_box
+   control_name="InterestListAllDirections"
+   height="16"
+   label="Receive updates from all around me (smoother vehicles)"
+   layout="topleft"
+   left="77"
+   name="interest_list_all_directions"
+   tool_tip="Asks the region to send you updates for everything around you, not only for what is in front of your camera. Reduces the rubber-banding of vehicles and other fast moving objects behind you or at the edge of the screen. Uses more bandwidth."
+   top_pad="8"
+   width="400" />
 
   <text
          type="string"
@@ -102,7 +112,7 @@
          layout="topleft"
          left="30"
          name="Web:"
-         top_pad="5"
+         top_pad="10"
          width="300">
     Web:
   </text>

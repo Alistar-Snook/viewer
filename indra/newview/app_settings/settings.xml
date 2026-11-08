@@ -13713,6 +13713,17 @@
       <key>Value</key>
       <integer>1</integer>
     </map>
+    <key>InterestListAllDirections</key>
+    <map>
+      <key>Comment</key>
+      <string>Ask the simulator to send object updates for everything around you, not only for what is inside your camera view. Reduces rubber-banding of fast moving objects (vehicles) behind you or at the edge of the screen, at the cost of more bandwidth.</string>
+      <key>Persist</key>
+      <integer>1</integer>
+      <key>Type</key>
+      <string>Boolean</string>
+      <key>Value</key>
+      <integer>0</integer>
+    </map>
     <key>VoiceCallsFriendsOnly</key>
     <!-- deprecated (see SL-12871) -->
     <map>

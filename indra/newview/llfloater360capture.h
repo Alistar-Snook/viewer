@@ -92,8 +92,6 @@ class LLFloater360Capture:
         bool mWaitingForDownloadCompletion = false;
 
         LLPointer<LLImageRaw> mRawImages[6];
-
-        std::string mStartILMode;
 };
 
 #endif  // LL_FLOATER_360CAPTURE_H
